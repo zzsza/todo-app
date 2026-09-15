@@ -7,6 +7,8 @@ const priorityInput = document.querySelector("#priority-input");
 const list = document.querySelector("#todo-list");
 const remainingCount = document.querySelector("#remaining-count");
 const emptyState = document.querySelector("#empty-state");
+const statusFilters = document.querySelector("#status-filters");
+const filterButtons = statusFilters.querySelectorAll("[data-filter]");
 
 const PRIORITIES = [
   { value: "high", label: "높음" },
@@ -16,6 +18,7 @@ const PRIORITIES = [
 
 let todos = loadTodos();
 let searchQuery = "";
+let currentFilter = "all";
 
 function loadTodos() {
   try {
@@ -43,15 +46,27 @@ function saveTodos() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
 }
 
+function getVisibleTodos() {
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
+
+  return todos.filter((todo) => {
+    const matchesStatus =
+      currentFilter === "all" ||
+      (currentFilter === "active" && !todo.completed) ||
+      (currentFilter === "completed" && todo.completed);
+    const matchesSearch =
+      !normalizedQuery ||
+      todo.title.toLocaleLowerCase().includes(normalizedQuery);
+
+    return matchesStatus && matchesSearch;
+  });
+}
+
 function render() {
   list.innerHTML = "";
 
   const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
-  const visibleTodos = normalizedQuery
-    ? todos.filter((todo) =>
-        todo.title.toLocaleLowerCase().includes(normalizedQuery)
-      )
-    : todos;
+  const visibleTodos = getVisibleTodos();
 
   visibleTodos.forEach((todo) => {
     const item = document.createElement("li");
@@ -98,7 +113,13 @@ function render() {
   emptyState.textContent = normalizedQuery
     ? "검색 결과가 없어요."
     : "아직 할 일이 없어요.";
-  emptyState.hidden = visibleTodos.length > 0;
+  emptyState.hidden = normalizedQuery
+    ? visibleTodos.length > 0
+    : todos.length > 0;
+
+  filterButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.filter === currentFilter));
+  });
 }
 
 function addTodo(title, priority) {
@@ -147,6 +168,14 @@ form.addEventListener("submit", (event) => {
 
 searchInput.addEventListener("input", () => {
   searchQuery = searchInput.value;
+  render();
+});
+
+statusFilters.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-filter]");
+  if (!button) return;
+
+  currentFilter = button.dataset.filter;
   render();
 });
 

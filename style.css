@@ -76,6 +76,28 @@ button { font: inherit; cursor: pointer; }
 .search-control input:focus { outline: 2px solid #202124; outline-offset: 1px; }
 
 .todo-section { margin-top: 24px; }
+.status-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.status-filters button {
+  min-height: 44px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: white;
+  color: #4b5563;
+  font-weight: 600;
+}
+.status-filters button:hover { background: #f3f4f6; color: #202124; }
+.status-filters button:focus-visible { outline: 2px solid #202124; outline-offset: 2px; }
+.status-filters button[aria-pressed="true"] {
+  border-color: #202124;
+  background: #202124;
+  color: white;
+}
 .todo-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .todo-item {
   display: flex;
