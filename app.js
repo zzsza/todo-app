@@ -2,6 +2,7 @@ const STORAGE_KEY = "class-todo-items";
 
 const form = document.querySelector("#todo-form");
 const input = document.querySelector("#todo-input");
+const searchInput = document.querySelector("#search-input");
 const priorityInput = document.querySelector("#priority-input");
 const list = document.querySelector("#todo-list");
 const remainingCount = document.querySelector("#remaining-count");
@@ -16,6 +17,7 @@ const PRIORITIES = [
 ];
 
 let todos = loadTodos();
+let searchQuery = "";
 let currentFilter = "all";
 
 function loadTodos() {
@@ -45,21 +47,28 @@ function saveTodos() {
 }
 
 function getVisibleTodos() {
-  if (currentFilter === "active") {
-    return todos.filter((todo) => !todo.completed);
-  }
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
 
-  if (currentFilter === "completed") {
-    return todos.filter((todo) => todo.completed);
-  }
+  return todos.filter((todo) => {
+    const matchesStatus =
+      currentFilter === "all" ||
+      (currentFilter === "active" && !todo.completed) ||
+      (currentFilter === "completed" && todo.completed);
+    const matchesSearch =
+      !normalizedQuery ||
+      todo.title.toLocaleLowerCase().includes(normalizedQuery);
 
-  return todos;
+    return matchesStatus && matchesSearch;
+  });
 }
 
 function render() {
   list.innerHTML = "";
 
-  getVisibleTodos().forEach((todo) => {
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
+  const visibleTodos = getVisibleTodos();
+
+  visibleTodos.forEach((todo) => {
     const item = document.createElement("li");
     item.className = `todo-item${todo.completed ? " completed" : ""}`;
 
@@ -101,7 +110,12 @@ function render() {
 
   const remaining = todos.filter((todo) => !todo.completed).length;
   remainingCount.textContent = `${remaining}개의 할 일 남음`;
-  emptyState.hidden = todos.length > 0;
+  emptyState.textContent = normalizedQuery
+    ? "검색 결과가 없어요."
+    : "아직 할 일이 없어요.";
+  emptyState.hidden = normalizedQuery
+    ? visibleTodos.length > 0
+    : todos.length > 0;
 
   filterButtons.forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.filter === currentFilter));
@@ -150,6 +164,11 @@ form.addEventListener("submit", (event) => {
   input.value = "";
   priorityInput.value = "medium";
   input.focus();
+});
+
+searchInput.addEventListener("input", () => {
+  searchQuery = searchInput.value;
+  render();
 });
 
 statusFilters.addEventListener("click", (event) => {
