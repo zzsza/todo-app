@@ -2,11 +2,13 @@ const STORAGE_KEY = "class-todo-items";
 
 const form = document.querySelector("#todo-form");
 const input = document.querySelector("#todo-input");
+const searchInput = document.querySelector("#search-input");
 const list = document.querySelector("#todo-list");
 const remainingCount = document.querySelector("#remaining-count");
 const emptyState = document.querySelector("#empty-state");
 
 let todos = loadTodos();
+let searchQuery = "";
 
 function loadTodos() {
   try {
@@ -28,7 +30,14 @@ function saveTodos() {
 function render() {
   list.innerHTML = "";
 
-  todos.forEach((todo) => {
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
+  const visibleTodos = normalizedQuery
+    ? todos.filter((todo) =>
+        todo.title.toLocaleLowerCase().includes(normalizedQuery)
+      )
+    : todos;
+
+  visibleTodos.forEach((todo) => {
     const item = document.createElement("li");
     item.className = `todo-item${todo.completed ? " completed" : ""}`;
 
@@ -54,7 +63,10 @@ function render() {
 
   const remaining = todos.filter((todo) => !todo.completed).length;
   remainingCount.textContent = `${remaining}개의 할 일 남음`;
-  emptyState.hidden = todos.length > 0;
+  emptyState.textContent = normalizedQuery
+    ? "검색 결과가 없어요."
+    : "아직 할 일이 없어요.";
+  emptyState.hidden = visibleTodos.length > 0;
 }
 
 function addTodo(title) {
@@ -85,6 +97,11 @@ form.addEventListener("submit", (event) => {
   addTodo(title);
   input.value = "";
   input.focus();
+});
+
+searchInput.addEventListener("input", () => {
+  searchQuery = searchInput.value;
+  render();
 });
 
 render();
