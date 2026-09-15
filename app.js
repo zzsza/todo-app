@@ -5,8 +5,11 @@ const input = document.querySelector("#todo-input");
 const list = document.querySelector("#todo-list");
 const remainingCount = document.querySelector("#remaining-count");
 const emptyState = document.querySelector("#empty-state");
+const statusFilters = document.querySelector("#status-filters");
+const filterButtons = statusFilters.querySelectorAll("[data-filter]");
 
 let todos = loadTodos();
+let currentFilter = "all";
 
 function loadTodos() {
   try {
@@ -25,10 +28,22 @@ function saveTodos() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
 }
 
+function getVisibleTodos() {
+  if (currentFilter === "active") {
+    return todos.filter((todo) => !todo.completed);
+  }
+
+  if (currentFilter === "completed") {
+    return todos.filter((todo) => todo.completed);
+  }
+
+  return todos;
+}
+
 function render() {
   list.innerHTML = "";
 
-  todos.forEach((todo) => {
+  getVisibleTodos().forEach((todo) => {
     const item = document.createElement("li");
     item.className = `todo-item${todo.completed ? " completed" : ""}`;
 
@@ -55,6 +70,10 @@ function render() {
   const remaining = todos.filter((todo) => !todo.completed).length;
   remainingCount.textContent = `${remaining}개의 할 일 남음`;
   emptyState.hidden = todos.length > 0;
+
+  filterButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.filter === currentFilter));
+  });
 }
 
 function addTodo(title) {
@@ -85,6 +104,14 @@ form.addEventListener("submit", (event) => {
   addTodo(title);
   input.value = "";
   input.focus();
+});
+
+statusFilters.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-filter]");
+  if (!button) return;
+
+  currentFilter = button.dataset.filter;
+  render();
 });
 
 render();
